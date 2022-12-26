@@ -20,3 +20,7 @@ class AnimatedSmoky(pygame.sprite.Sprite):
     def update(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = pygame.transform.scale(self.frames[self.cur_frame], (124, 124))
+
+    # функция перемещения (сдвига)
+    def move(self, x, y):
+        self.rect = self.rect.move(x, y)

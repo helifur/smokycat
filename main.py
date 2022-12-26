@@ -22,6 +22,29 @@ def load_image(name, color_key=None):
     return image
 
 
+# функция прыжка
+def jump():
+    global is_jump, jump_count, smoky
+
+    # если перемещение в пределах разумного
+    if jump_count >= -30:
+        # в класс героя добавлена функция move
+        # она осуществляет перемещение героя
+        # по переданным координатам
+        # res_x + x
+        # res_y + y
+        # res_x = итоговый x
+        # res_y = итоговый y
+        # x, y - аргументы "сдвига"
+        smoky.move(0, -jump_count / 2.5)
+        jump_count -= 1
+
+    else:
+        # возвращаем исходные значения
+        jump_count = 30
+        is_jump = False
+
+
 pygame.init()
 
 FPS = 60
@@ -35,8 +58,16 @@ smoky_sprite = pygame.sprite.Group()
 
 background_image = Background()
 
+# координата первого фона
 bg_x = 0
+# скорость передвижения фона
 bg_speed = 200
+
+# характеристики прыжка
+# флаг
+is_jump = False
+# счетчик прыжков
+jump_count = 30
 
 # счетчик анимаций
 # нужен для стабильности переключения
@@ -51,6 +82,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        # если игрок нажал пробел и прыжок неактивен
+        # активируем прыжок
+        if not is_jump and pygame.key.get_pressed()[pygame.K_SPACE]:
+            is_jump = True
+
     screen.fill(pygame.Color("black"))
 
     # отображаем 2 фона
@@ -59,6 +95,9 @@ while running:
     # нужен для иллюзии бесконечного мира
     screen.blit(background_image.image, (bg_x, 0))
     screen.blit(background_image.image, (bg_x + 1270, 0))
+
+    if is_jump:
+        jump()  # осуществляет прыжок
 
     smoky_sprite.draw(screen)
 
