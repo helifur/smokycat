@@ -1,34 +1,8 @@
 import os
 import pygame
 
-
-class Background(pygame.sprite.Sprite):
-    image = pygame.image.load("data/images/background/background.jpg")
-
-    def __init__(self):
-        super().__init__()
-        self.image = Background.image
-
-
-class AnimatedSmoky(pygame.sprite.Sprite):
-    def __init__(self, sheet, columns, rows, x, y):
-        super().__init__(all_sprites)
-        self.frames = []
-        self.cut_sheet(sheet, columns, rows)
-        self.cur_frame = 0
-        self.image = pygame.transform.scale(self.frames[self.cur_frame], (124, 124))
-        self.rect = self.rect.move(x, y)
-
-    def cut_sheet(self, sheet, columns, rows):
-        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
-        for j in range(rows):
-            for i in range(columns):
-                frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
-
-    def update(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-        self.image = pygame.transform.scale(self.frames[self.cur_frame], (124, 124))
+from data.modules.animated_smoky import AnimatedSmoky
+from data.modules.background import Background
 
 
 def load_image(name, color_key=None):
@@ -57,9 +31,8 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Smoky Cat")
 clock = pygame.time.Clock()
 
-all_sprites = pygame.sprite.Group()
+smoky_sprite = pygame.sprite.Group()
 
-background_sprite = pygame.sprite.Group()
 background_image = Background()
 
 bg_x = 0
@@ -70,7 +43,7 @@ bg_speed = 200
 # фреймов героя
 anim_count = 0
 
-smoky = AnimatedSmoky(load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)
+smoky = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)
 running = True
 
 while running:
@@ -87,11 +60,11 @@ while running:
     screen.blit(background_image.image, (bg_x, 0))
     screen.blit(background_image.image, (bg_x + 1270, 0))
 
-    all_sprites.draw(screen)
+    smoky_sprite.draw(screen)
 
     # анимация
     if anim_count == 8:
-        all_sprites.update()
+        smoky_sprite.update()
         anim_count = 0
 
     # двигаем фон
