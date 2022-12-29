@@ -114,8 +114,9 @@ while running:
         if event.type == barrier_timer:
             # создаем камень
             # добавляем его в список существующих
+            # переопределяем координату камня
+            # делаем ее случайной для разнообразия позиций камней
             barrier_x = random.randint(1270, 1590)
-            print(barrier_x)
             barriers_in_game.append(Barrier(bg_group, barrier_x))
 
     screen.fill(pygame.Color("black"))
