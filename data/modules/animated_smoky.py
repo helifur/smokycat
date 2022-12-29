@@ -9,6 +9,7 @@ class AnimatedSmoky(pygame.sprite.Sprite):
         self.cur_frame = 0
         self.image = pygame.transform.scale(self.frames[self.cur_frame], (124, 124))
         self.rect = self.rect.move(x, y)
+        self.mask = pygame.mask.from_surface(self.image)
 
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
