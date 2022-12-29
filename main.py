@@ -57,6 +57,18 @@ HEIGHT = 720
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Smoky Cat")
 clock = pygame.time.Clock()
+font = pygame.font.Font(None, 60)
+
+count_fish = 0
+count_text = font.render(str(count_fish), 1, (255, 192, 203))
+count_text_x = 1140
+count_text_y = 20
+screen.blit(count_text, (count_text_x, count_text_y))
+
+text = font.render("Рыбки:", 1, (255, 192, 203))
+text_x = 980
+text_y = 18
+screen.blit(text, (text_x, text_y))
 
 # Группа спрайтов фона
 # сюда относятся два фона
@@ -130,10 +142,10 @@ while running:
             # то же самое для рыбки
             point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
 
-            # здесь нужно проверить
-            # чтобы новая рыбка не пересекалась
-            # ни с одним из камней
-            # тк это дефект
+            # # здесь нужно проверить
+            # # чтобы новая рыбка не пересекалась
+            # # ни с одним из камней
+            # # тк это дефект
             if barriers_in_game:
                 for barrier in barriers_in_game:
                     # если рыбка пересекается с одним из камней
@@ -149,6 +161,8 @@ while running:
     # отображаем все
     bg_group.draw(screen)
     smoky_sprite.draw(screen)
+    screen.blit(count_text, (count_text_x, count_text_y))
+    screen.blit(text, (text_x, text_y))
 
     # Сдвиг фона и камня
     # он одинаковый, т.к. камень должен
@@ -197,7 +211,8 @@ while running:
         for point in points_in_game:
             # проверка пересечения рыбки и игрока
             if not point.check(smoky, shift):
-                print('+1')
+                # кол-во рыбок +1
+                count_fish += 1
                 # удаляем элемент из списка
                 points_in_game.remove(point)
                 # удаляем его с экрана
@@ -205,6 +220,8 @@ while running:
 
     # счетчик
     anim_count += 1
+    # переопределяем текст с обновлённым балансом
+    count_text = font.render(str(count_fish), 1, (255, 192, 203))
 
     clock.tick(FPS)
     pygame.display.flip()
