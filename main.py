@@ -6,6 +6,7 @@ import pygame
 from data.modules.animated_smoky import AnimatedSmoky
 from data.modules.background import Background
 from data.modules.barrier import Barrier
+from data.modules.point import Point
 
 
 def load_image(name, color_key=None):
@@ -85,12 +86,19 @@ pygame.time.set_timer(barrier_timer, 1600)
 # список всех существующих камней
 barriers_in_game = [Barrier(bg_group, barrier_x)]
 
+# создаем очки (рыбки)
+# начальная координата
+point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
+# интервал появления тот же, что и для камней
+# список всех существующих монеток
+points_in_game = [Point(bg_group, point_x)]
+
 # характеристики прыжка
 # флаг
 is_jump = False
 # счетчик прыжков
 jump_count = 30
-
+point = pygame.image.load('data/images/points/fish.png')
 # счетчик анимаций
 # нужен для стабильности переключения
 # фреймов героя
@@ -111,6 +119,7 @@ while running:
             is_jump = True
 
         # если пришло время создавать камень
+        # или рыбку
         if event.type == barrier_timer:
             # создаем камень
             # добавляем его в список существующих
@@ -118,6 +127,22 @@ while running:
             # делаем ее случайной для разнообразия позиций камней
             barrier_x = random.randint(1270, 1590)
             barriers_in_game.append(Barrier(bg_group, barrier_x))
+            # то же самое для рыбки
+            point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
+
+            # здесь нужно проверить
+            # чтобы новая рыбка не пересекалась
+            # ни с одним из камней
+            # тк это дефект
+            if barriers_in_game:
+                for barrier in barriers_in_game:
+                    # если рыбка пересекается с одним из камней
+                    while pygame.sprite.collide_mask(Point(bg_group, point_x), barrier):
+                        # переопределяем координату
+                        point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
+
+            # добавляем рыбку
+            points_in_game.append(Point(bg_group, point_x))
 
     screen.fill(pygame.Color("black"))
 
@@ -166,6 +191,17 @@ while running:
                 # игра закончена
                 running = False
                 continue
+
+    # все то же, что и с камнями
+    if points_in_game:
+        for point in points_in_game:
+            # проверка пересечения рыбки и игрока
+            if not point.check(smoky, shift):
+                print('+1')
+                # удаляем элемент из списка
+                points_in_game.remove(point)
+                # удаляем его с экрана
+                point.kill()
 
     # счетчик
     anim_count += 1
