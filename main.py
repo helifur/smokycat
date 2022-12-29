@@ -1,5 +1,6 @@
 import os
 import random
+import sys
 
 import pygame
 
@@ -7,6 +8,7 @@ from data.modules.animated_smoky import AnimatedSmoky
 from data.modules.background import Background
 from data.modules.barrier import Barrier
 from data.modules.point import Point
+from data.modules.menu import Menu
 
 
 def load_image(name, color_key=None):
@@ -49,6 +51,39 @@ def jump():
         is_jump = False
 
 
+def start_screen():
+    # меню
+    menu = Menu()
+    menu.append_option('Играть', lambda: 1)
+    menu.append_option('Выйти', quit)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if pygame.key.get_pressed()[pygame.K_UP]:
+                menu.switch(-1)
+
+            if pygame.key.get_pressed()[pygame.K_DOWN]:
+                menu.switch(1)
+
+            if pygame.key.get_pressed()[pygame.K_RETURN]:
+                # если игрок нажал кнопку "Играть"
+                if menu.current_option_index == 0:
+                    return  # начинаем игру
+
+                menu.select()
+
+        screen.fill((0, 0, 0))
+
+        menu.draw(screen, 550, 300, 75)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 pygame.init()
 
 FPS = 120
@@ -59,6 +94,7 @@ pygame.display.set_caption("Smoky Cat")
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 60)
 
+# счетчик рыбок
 count_fish = 0
 count_text = font.render(str(count_fish), 1, (255, 192, 203))
 count_text_x = 1140
@@ -103,7 +139,7 @@ barriers_in_game = [Barrier(bg_group, barrier_x)]
 point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
 # интервал появления тот же, что и для камней
 # список всех существующих монеток
-points_in_game = [Point(bg_group, point_x)]
+points_in_game = []
 
 # характеристики прыжка
 # флаг
@@ -119,6 +155,8 @@ anim_count = 0
 # главный герой
 smoky = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)
 running = True
+
+start_screen()
 
 while running:
     for event in pygame.event.get():
@@ -140,7 +178,7 @@ while running:
             barrier_x = random.randint(1270, 1590)
             barriers_in_game.append(Barrier(bg_group, barrier_x))
             # то же самое для рыбки
-            point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
+            point_x = random.randint(barrier_x, barrier_x + random.randint(450, 600))
 
             # # здесь нужно проверить
             # # чтобы новая рыбка не пересекалась
