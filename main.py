@@ -73,8 +73,8 @@ def end():
             if event.type == pygame.QUIT:
                 terminate()
 
-            if event.type == pygame.MOUSEBUTTONDOWN and over.rect.bottomright >= size:
-                return 1
+            if event.type in [pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN] and over.rect.bottomright >= size:
+                return
 
         screen.fill(pygame.Color("black"))
         end_group.draw(screen)
@@ -90,14 +90,20 @@ def end():
 def show_result():
     size = (WIDTH, HEIGHT)
     result = pygame.sprite.Group()
+    FPS = 20
 
     result = font.render(f"Вы собрали {count_fish} рыбок!", True, (255, 192, 203))
-    result_x = 370
-    result_y = 100
+    result_x = 390
+    result_y = 200
 
     press_any = font.render("Нажмите любую клавишу для продолжения", True, (255, 255, 255))
     pa_x = 160
     pa_y = 300
+
+    anim_count = 0
+
+    smoky_sprite = pygame.sprite.Group()
+    _ = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 530, 495)
 
     running = True
     v = 1000
@@ -113,6 +119,9 @@ def show_result():
 
         screen.blit(result, (result_x, result_y))
         screen.blit(press_any, (pa_x, pa_y))
+        smoky_sprite.draw(screen)
+
+        smoky_sprite.update()
 
         clock.tick(FPS)
         pygame.display.flip()
@@ -132,6 +141,9 @@ def start_screen():
     pygame.display.set_caption("Smoky Cat")
     clock = pygame.time.Clock()
     font = pygame.font.Font(None, 60)
+    font_head = pygame.font.Font("data/fonts/Sevillana-Regular.ttf", 90)
+    # заголовок
+    head = font_head.render("Smoky Cat", True, (255, 255, 255))
     # меню
     menu = Menu()
     menu.append_option('Играть', lambda: 1)
@@ -158,7 +170,8 @@ def start_screen():
 
         screen.fill((0, 0, 0))
 
-        menu.draw(screen, 550, 300, 75)
+        menu.draw(screen, 550, 350, 75)
+        screen.blit(head, (420, 120))
 
         pygame.display.flip()
         clock.tick(FPS)
@@ -169,12 +182,12 @@ def game():
 
     # счетчик рыбок
     count_fish = 0
-    count_text = font.render(str(count_fish), 1, (255, 192, 203))
+    count_text = font.render(str(count_fish), True, (255, 192, 203))
     count_text_x = 1140
     count_text_y = 20
     screen.blit(count_text, (count_text_x, count_text_y))
 
-    text = font.render("Рыбки:", 1, (255, 192, 203))
+    text = font.render("Рыбки:", True, (255, 192, 203))
     text_x = 980
     text_y = 18
     screen.blit(text, (text_x, text_y))
@@ -310,13 +323,11 @@ def game():
             for barrier in barriers_in_game:
                 # проверка пересечения камня и игрока
                 if not barrier.check(smoky, shift):
-                    if end():
-                        show_result()
-                        pygame.quit()
-                        return "Continue"
-                    # игра закончена
-                    # running = False
-                    # continue
+                    end()  # показываем картинку Game Over
+                    show_result()  # показываем результат игры
+                    # запускаем программу с самого начала
+                    pygame.quit()
+                    return "Continue"
 
         # все то же, что и с камнями
         if points_in_game:
@@ -333,7 +344,7 @@ def game():
         # счетчик
         anim_count += 1
         # переопределяем текст с обновлённым балансом
-        count_text = font.render(str(count_fish), 1, (255, 192, 203))
+        count_text = font.render(str(count_fish), True, (255, 192, 203))
 
         clock.tick(FPS)
         pygame.display.flip()
@@ -341,6 +352,11 @@ def game():
     pygame.quit()
 
 
+# флаг
+# нужен для полной перезагрузки программы
+# это необходимо в момент, когда игрок проигрывает
+# мы отображаем ему результат
+# и запускаем программу с самого начала
 do = "Continue"
 while do == "Continue":
     start_screen()
