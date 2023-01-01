@@ -66,26 +66,53 @@ def end():
     over.rect = over.image.get_rect()
     over.rect.topleft = (-1200, 0)
 
-    result = font.render(f"Вы собрали {count_fish} рыбок!", 1, (255, 192, 203))
-    result_x = 480
-    result_y = 500
-
     running = True
-    v = 400
+    v = 1000
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
 
-            if event.type == pygame.MOUSEBUTTONDOWN and over.rect.bottomright == size:
-                return
+            if event.type == pygame.MOUSEBUTTONDOWN and over.rect.bottomright >= size:
+                return 1
 
         screen.fill(pygame.Color("black"))
         end_group.draw(screen)
-        if over.rect.bottomright != size:
+        if over.rect.bottomright < size:
             over.rect.left += v / FPS
-        else:
-            screen.blit(result, (result_x, result_y))
+
+        clock.tick(FPS)
+        pygame.display.flip()
+
+    pygame.quit()
+
+
+def show_result():
+    size = (WIDTH, HEIGHT)
+    result = pygame.sprite.Group()
+
+    result = font.render(f"Вы собрали {count_fish} рыбок!", True, (255, 192, 203))
+    result_x = 370
+    result_y = 100
+
+    press_any = font.render("Нажмите любую клавишу для продолжения", True, (255, 255, 255))
+    pa_x = 160
+    pa_y = 300
+
+    running = True
+    v = 1000
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+
+            if event.type in [pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN]:
+                return 1
+
+        screen.fill(pygame.Color("black"))
+
+        screen.blit(result, (result_x, result_y))
+        screen.blit(press_any, (pa_x, pa_y))
 
         clock.tick(FPS)
         pygame.display.flip()
@@ -283,9 +310,10 @@ def game():
             for barrier in barriers_in_game:
                 # проверка пересечения камня и игрока
                 if not barrier.check(smoky, shift):
-                    end()
-                    pygame.quit()
-                    return "Continue"
+                    if end():
+                        show_result()
+                        pygame.quit()
+                        return "Continue"
                     # игра закончена
                     # running = False
                     # continue
