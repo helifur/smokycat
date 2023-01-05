@@ -9,6 +9,7 @@ from data.modules.background import Background
 from data.modules.barrier import Barrier
 from data.modules.point import Point
 from data.modules.menu import Menu
+from data.modules.lives import Life, Lives
 
 
 def load_image(name, color_key=None):
@@ -147,7 +148,7 @@ def start_screen():
     # меню
     menu = Menu()
     menu.append_option('Играть', lambda: 1)
-    menu.append_option('Выйти', quit)
+    menu.append_option('Выйти', terminate)
 
     while True:
         for event in pygame.event.get():
@@ -178,7 +179,8 @@ def start_screen():
 
 
 def game():
-    global FPS, WIDTH, HEIGHT, clock, smoky, is_jump, jump_count, screen, font, count_fish
+    global FPS, WIDTH, HEIGHT, clock, smoky, is_jump, jump_count, \
+        screen, font, count_fish, LIFE_SHIFT, FIRST_LIFE_SHIFT
 
     # счетчик рыбок
     count_fish = 0
@@ -238,6 +240,17 @@ def game():
     # фреймов героя
     anim_count = 0
 
+    # сдвиг на экране первого сердца
+    FIRST_LIFE_SHIFT = 20
+    # расстояние между всеми сердцами на экране
+    LIFE_SHIFT = 70
+
+    # новая жизнь
+    life = Life(FIRST_LIFE_SHIFT)
+
+    # все жизни
+    lives = Lives(life)
+
     # главный герой
     smoky = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)
     running = True
@@ -283,6 +296,7 @@ def game():
         # отображаем все
         bg_group.draw(screen)
         smoky_sprite.draw(screen)
+        lives.draw(screen)
         screen.blit(count_text, (count_text_x, count_text_y))
         screen.blit(text, (text_x, text_y))
 
