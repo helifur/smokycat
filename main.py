@@ -223,8 +223,6 @@ def game():
     barriers_in_game = [Barrier(bg_group, barrier_x)]
 
     # создаем очки (рыбки)
-    # начальная координата
-    point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
     # интервал появления тот же, что и для камней
     # список всех существующих монеток
     points_in_game = []
@@ -275,12 +273,13 @@ def game():
                 barrier_x = random.randint(1270, 1590)
                 barriers_in_game.append(Barrier(bg_group, barrier_x))
                 # то же самое для рыбки
+                # начальная координата
                 point_x = random.randint(barrier_x, barrier_x + random.randint(450, 600))
 
-                # # здесь нужно проверить
-                # # чтобы новая рыбка не пересекалась
-                # # ни с одним из камней
-                # # тк это дефект
+                # здесь нужно проверить
+                # чтобы новая рыбка не пересекалась
+                # ни с одним из камней
+                # тк это дефект
                 if barriers_in_game:
                     for barrier in barriers_in_game:
                         # если рыбка пересекается с одним из камней
