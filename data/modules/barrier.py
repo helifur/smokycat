@@ -12,8 +12,11 @@ class Barrier(pygame.sprite.Sprite):
         self.rect.y = 500
         self.mask = pygame.mask.from_surface(self.image)
 
-    def check(self, smoky, shift):
-        if pygame.sprite.collide_mask(self, smoky):
-            return False
+    def check(self, smoky):
+        """Метод возвращает True или False в зависимости от того,
+        было ли пересечение объекта с самим Barrier."""
+        return pygame.sprite.collide_mask(self, smoky)
+
+    def move(self, shift):
+        """Метод двигает Barrier на shift влево по оси X."""
         self.rect = self.rect.move(-shift, 0)
-        return True

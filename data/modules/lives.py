@@ -27,5 +27,6 @@ class Lives(pygame.sprite.Group):
         # переопределяем старый список жизней
         self.items = list(self)
 
-    def get_life(self, index):
-        pass
+    def last_life(self):
+        """Метод возвращает и удаляет последнюю жизнь в списке."""
+        return self.items.pop(-1)

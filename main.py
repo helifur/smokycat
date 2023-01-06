@@ -252,7 +252,7 @@ def game():
     # "мигать". Для реализации "мигания" и нужен этот таймер
     # "Мигание" - показать/скрыть спрайт интервалом 0.5 сек.
     collide_timer = pygame.USEREVENT + 2
-    pygame.time.set_timer(collide_timer, 500)
+    pygame.time.set_timer(collide_timer, 200)
     # было ли столкновение
     is_collide = False
     # скрывать или показывать спрайт при "мигании"
@@ -308,11 +308,11 @@ def game():
                 # добавляем рыбку
                 points_in_game.append(Point(bg_group, point_x))
 
-
             if event.type == collide_timer and is_collide:
-                if collide_count == 6:
+                if collide_count == 4:
                     is_collide = False
                     collide_count = 0
+                    bg_speed = 500
 
                 else:
                     if hide:
@@ -347,6 +347,29 @@ def game():
             smoky_sprite.update()
             anim_count = 0
 
+        # если камни существуют
+        if barriers_in_game:
+            # пробегаемся по всем камням
+            for barrier in barriers_in_game:
+                # если какой-нибудь камень и игрок пересеклись
+                # и если столкновения еще не было
+                if barrier.check(smoky) and not is_collide:
+                    # делаем последнюю жизнь неактивной
+                    # меняем ее изображение на image_inactive
+                    lives.last_life().image = Life.image_inactive
+                    # столкновение было
+                    is_collide = True
+                    # замедляем фон
+                    bg_speed = 300
+                    # пересчитываем сдвиг во избежание разрыва синхронности между
+                    # движением фона и камня
+                    # иначе игрок увидит, будто персонаж "толкает" камень
+                    # в течение доли секунды
+                    shift = bg_speed / FPS
+                else:
+                    # передвигаем камень наравне с фоном
+                    barrier.move(shift)
+
         """MOVE BG"""
         # двигаем спрайты
         background1.move(-shift)
@@ -362,20 +385,6 @@ def game():
         if background2.check():
             background2.move(1270 * 2)
         """========"""
-
-        # если камни существуют
-        if barriers_in_game:
-            # пробегаемся по всем камням
-            for barrier in barriers_in_game:
-                # проверка пересечения камня и игрока
-                if not barrier.check(smoky, shift):
-                    list(lives)[-1].image = Life.image_inactive
-                    is_collide = True
-                    # end()  # показываем картинку Game Over
-                    # show_result()  # показываем результат игры
-                    # # запускаем программу с самого начала
-                    # pygame.quit()
-                    # return "Continue"
 
         # все то же, что и с камнями
         if points_in_game:
