@@ -16,7 +16,16 @@ class Life(pygame.sprite.Sprite):
 class Lives(pygame.sprite.Group):
     def __init__(self, life1):
         super().__init__()
+        # добавляем первую жизнь
         self.add(life1)
+        # все существующие жизни в виде списка
+        self.items = list(self)
 
-    def add_elem(self):
-        self.add(Life(LIFE_SHIFT * len(self) + FIRST_LIFE_SHIFT))
+    def new_life(self, life_shift, first_life_shift):
+        # добавляем новую жизнь
+        self.add(Life(life_shift * len(self) + first_life_shift))
+        # переопределяем старый список жизней
+        self.items = list(self)
+
+    def get_life(self, index):
+        pass

@@ -52,6 +52,10 @@ def jump():
         is_jump = False
 
 
+def god_mode():
+    pass
+
+
 def terminate():
     pygame.quit()
     sys.exit()
@@ -180,7 +184,7 @@ def start_screen():
 
 def game():
     global FPS, WIDTH, HEIGHT, clock, smoky, is_jump, jump_count, \
-        screen, font, count_fish, LIFE_SHIFT, FIRST_LIFE_SHIFT
+        screen, font, count_fish, LIFE_SHIFT, FIRST_LIFE_SHIFT, is_collide
 
     # счетчик рыбок
     count_fish = 0
@@ -242,12 +246,26 @@ def game():
     FIRST_LIFE_SHIFT = 20
     # расстояние между всеми сердцами на экране
     LIFE_SHIFT = 70
+    # Таймер.
+    # Когда персонаж сталкивается, имитируем столкновение.
+    # Для этого в течение 3 секунд будем заставлять персонажа
+    # "мигать". Для реализации "мигания" и нужен этот таймер
+    # "Мигание" - показать/скрыть спрайт интервалом 0.5 сек.
+    collide_timer = pygame.USEREVENT + 2
+    pygame.time.set_timer(collide_timer, 500)
+    # было ли столкновение
+    is_collide = False
+    # скрывать или показывать спрайт при "мигании"
+    hide = True
+    # сколько раз сработал collide timer
+    collide_count = 0
 
     # новая жизнь
     life = Life(FIRST_LIFE_SHIFT)
-
     # все жизни
     lives = Lives(life)
+    # FOR DEV
+    lives.new_life(LIFE_SHIFT, FIRST_LIFE_SHIFT)
 
     # главный герой
     smoky = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)
@@ -289,6 +307,21 @@ def game():
 
                 # добавляем рыбку
                 points_in_game.append(Point(bg_group, point_x))
+
+
+            if event.type == collide_timer and is_collide:
+                if collide_count == 6:
+                    is_collide = False
+                    collide_count = 0
+
+                else:
+                    if hide:
+                        smoky.kill()
+                    else:
+                        smoky_sprite.add(smoky)
+
+                    hide = not hide
+                    collide_count += 1
 
         screen.fill(pygame.Color("black"))
 
@@ -336,11 +369,13 @@ def game():
             for barrier in barriers_in_game:
                 # проверка пересечения камня и игрока
                 if not barrier.check(smoky, shift):
-                    end()  # показываем картинку Game Over
-                    show_result()  # показываем результат игры
-                    # запускаем программу с самого начала
-                    pygame.quit()
-                    return "Continue"
+                    list(lives)[-1].image = Life.image_inactive
+                    is_collide = True
+                    # end()  # показываем картинку Game Over
+                    # show_result()  # показываем результат игры
+                    # # запускаем программу с самого начала
+                    # pygame.quit()
+                    # return "Continue"
 
         # все то же, что и с камнями
         if points_in_game:
