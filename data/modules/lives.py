@@ -1,4 +1,5 @@
 import pygame
+from data.modules.config import LIFE_SHIFT, FIRST_LIFE_SHIFT
 
 
 class Life(pygame.sprite.Sprite):
@@ -21,9 +22,9 @@ class Lives(pygame.sprite.Group):
         # все существующие жизни в виде списка
         self.items = list(self)
 
-    def new_life(self, life_shift, first_life_shift):
+    def new_life(self):
         # добавляем новую жизнь
-        self.add(Life(life_shift * len(self) + first_life_shift))
+        self.add(Life(LIFE_SHIFT * len(self) + FIRST_LIFE_SHIFT))
         # переопределяем старый список жизней
         self.items = list(self)
 

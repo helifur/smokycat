@@ -4,12 +4,16 @@ import sys
 
 import pygame
 
+import data.modules.config
 from data.modules.animated_smoky import AnimatedSmoky
 from data.modules.background import Background
 from data.modules.barrier import Barrier
-from data.modules.point import Point
-from data.modules.menu import Menu
+from data.modules.config import FIRST_LIFE_SHIFT, FPS, WIDTH, \
+    HEIGHT, BG_SPEED_PLUS, BG_TIMER_SECONDS, BARRIER_TIMER_SECONDS, \
+    BARRIER_TIMER_DELAY, BARRIER_X, JUMP_COUNT
 from data.modules.lives import Life, Lives
+from data.modules.menu import Menu
+from data.modules.point import Point
 
 
 def load_image(name, color_key=None):
@@ -52,10 +56,6 @@ def jump():
         is_jump = False
 
 
-def god_mode():
-    pass
-
-
 def terminate():
     pygame.quit()
     sys.exit()
@@ -93,11 +93,16 @@ def end():
 
 
 def show_result():
-    size = (WIDTH, HEIGHT)
-    result = pygame.sprite.Group()
     FPS = 20
 
-    result = font.render(f"Вы собрали {count_fish} рыбок!", True, (255, 192, 203))
+    # выбираем правильную форму слова "рыбки" в зависимости от результата
+    if (count_fish % 10) == 0 or (5 <= (count_fish % 10) <= 9):
+        result = font.render(f"Вы собрали {count_fish} рыбок!", True, (255, 192, 203))
+    elif (count_fish % 10) == 1:
+        result = font.render(f"Вы собрали {count_fish} рыбку!", True, (255, 192, 203))
+    else:
+        result = font.render(f"Вы собрали {count_fish} рыбки!", True, (255, 192, 203))
+
     result_x = 390
     result_y = 200
 
@@ -105,27 +110,24 @@ def show_result():
     pa_x = 160
     pa_y = 300
 
-    anim_count = 0
-
     smoky_sprite = pygame.sprite.Group()
     _ = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 530, 495)
 
     running = True
-    v = 1000
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
 
             if event.type in [pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN]:
-                return 1
+                pygame.quit()
+                return
 
         screen.fill(pygame.Color("black"))
 
         screen.blit(result, (result_x, result_y))
         screen.blit(press_any, (pa_x, pa_y))
         smoky_sprite.draw(screen)
-
         smoky_sprite.update()
 
         clock.tick(FPS)
@@ -135,18 +137,15 @@ def show_result():
 
 
 def start_screen():
-    global FPS, WIDTH, HEIGHT, clock, smoky, is_jump, jump_count, screen, font
+    global clock, smoky, is_jump, jump_count, screen, font
 
     pygame.init()
 
-    FPS = 120
-    WIDTH = 1200
-    HEIGHT = 720
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Smoky Cat")
     clock = pygame.time.Clock()
-    font = pygame.font.Font(None, 60)
-    font_head = pygame.font.Font("data/fonts/Sevillana-Regular.ttf", 90)
+    # FONTS
+    font, font_head = data.modules.config.get_fonts()
     # заголовок
     head = font_head.render("Smoky Cat", True, (255, 255, 255))
     # меню
@@ -183,8 +182,14 @@ def start_screen():
 
 
 def game():
-    global FPS, WIDTH, HEIGHT, clock, smoky, is_jump, jump_count, \
-        screen, font, count_fish, LIFE_SHIFT, FIRST_LIFE_SHIFT, is_collide
+    global jump_count, smoky, count_fish, is_collide, is_jump, barrier_timer_seconds, fps
+
+    fps = FPS
+    # каждые BG_TIMER_SECONDS секунд
+    # увеличиваем скорость движения фона
+    # на BG_SPEED_PLUS пикселей
+    speed_timer = pygame.USEREVENT + 1
+    pygame.time.set_timer(speed_timer, BG_TIMER_SECONDS)
 
     # счетчик рыбок
     count_fish = 0
@@ -205,10 +210,8 @@ def game():
     # группа спрайтов для героя
     smoky_sprite = pygame.sprite.Group()
 
-    # координата первого фона
-    bg_x = 0
     # скорость передвижения фона
-    bg_speed = 500
+    bg_speed = 600
 
     # определяем 2 фона
     # первый - основной, его видит игрок
@@ -219,10 +222,12 @@ def game():
 
     # инициализируем камни (препятствия)
     # начальная координата любого камня
-    barrier_x = 1150
+    barrier_x = BARRIER_X
+    # изначально камни будут появляться каждые BARRIER_TIMER_SECONDS секунд
+    barrier_timer_seconds = BARRIER_TIMER_SECONDS
     # интервал появления камней
-    barrier_timer = pygame.USEREVENT + 1
-    pygame.time.set_timer(barrier_timer, 1600)
+    barrier_timer = pygame.USEREVENT + 2
+    pygame.time.set_timer(barrier_timer, barrier_timer_seconds)
     # список всех существующих камней
     barriers_in_game = [Barrier(bg_group, barrier_x)]
 
@@ -231,32 +236,26 @@ def game():
     # список всех существующих монеток
     points_in_game = []
 
-    # характеристики прыжка
+    # Характеристики прыжка
     # флаг
     is_jump = False
     # счетчик прыжков
-    jump_count = 30
-    point = pygame.image.load('data/images/points/fish.png')
+    jump_count = JUMP_COUNT
     # счетчик анимаций
     # нужен для стабильности переключения
     # фреймов героя
     anim_count = 0
 
-    # сдвиг на экране первого сердца
-    FIRST_LIFE_SHIFT = 20
-    # расстояние между всеми сердцами на экране
-    LIFE_SHIFT = 70
-    # Таймер.
+    # Жизни
+    # таймер
     # Когда персонаж сталкивается, имитируем столкновение.
     # Для этого в течение 3 секунд будем заставлять персонажа
     # "мигать". Для реализации "мигания" и нужен этот таймер
     # "Мигание" - показать/скрыть спрайт интервалом 0.5 сек.
-    collide_timer = pygame.USEREVENT + 2
+    collide_timer = pygame.USEREVENT + 3
     pygame.time.set_timer(collide_timer, 200)
     # было ли столкновение
     is_collide = False
-    # скрывать или показывать спрайт при "мигании"
-    hide = True
     # сколько раз сработал collide timer
     collide_count = 0
 
@@ -264,8 +263,6 @@ def game():
     life = Life(FIRST_LIFE_SHIFT)
     # все жизни
     lives = Lives(life)
-    # FOR DEV
-    lives.new_life(LIFE_SHIFT, FIRST_LIFE_SHIFT)
 
     # главный герой
     smoky = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)
@@ -303,25 +300,47 @@ def game():
                         # если рыбка пересекается с одним из камней
                         while pygame.sprite.collide_mask(Point(bg_group, point_x), barrier):
                             # переопределяем координату
-                            point_x = random.randint(barrier_x, barrier_x + random.randint(650, 800))
+                            point_x = random.randint(barrier_x, barrier_x + random.randint(450, 600))
 
                 # добавляем рыбку
                 points_in_game.append(Point(bg_group, point_x))
 
+            # анимация мигания при столкновении
             if event.type == collide_timer and is_collide:
+                # если анимации мигания достаточно
+                # счетчик отражает сколько раз персонаж
+                # скрылся + появился
                 if collide_count == 4:
+                    # столкновение прошло
                     is_collide = False
+                    # возвращаем исходные значения
                     collide_count = 0
-                    bg_speed = 500
+                    bg_speed *= 2
+                    barrier_timer_seconds //= 2
 
                 else:
-                    if hide:
+                    # если нужно скрыть
+                    # то есть если персонаж есть на экране
+                    if smoky_sprite:
                         smoky.kill()
                     else:
+                        # возвращаем персонажа обратно на экран
                         smoky_sprite.add(smoky)
 
-                    hide = not hide
+                    # количество анимаций +1
                     collide_count += 1
+
+            # ускорение каждые 10 секунд
+            if event.type == speed_timer:
+                # ускоряем движение
+                bg_speed += BG_SPEED_PLUS
+                # камни появляются чаще
+                barrier_timer_seconds -= BARRIER_TIMER_DELAY
+                # ставим новый таймер для камней
+                pygame.time.set_timer(barrier_timer, barrier_timer_seconds)
+                # делаем плавнее чтобы персонаж
+                # прыгал быстрее
+                fps += 15
 
         screen.fill(pygame.Color("black"))
 
@@ -337,7 +356,7 @@ def game():
         # передвигаться параллельно с фоном
         # чтобы игрок видел камень
         # который стоит на месте
-        shift = bg_speed / FPS
+        shift = bg_speed / fps
 
         if is_jump:
             jump()  # осуществляет прыжок
@@ -369,15 +388,30 @@ def game():
                     # столкновение было
                     is_collide = True
                     # замедляем фон
-                    bg_speed = 300
+                    bg_speed //= 2
                     # пересчитываем сдвиг во избежание разрыва синхронности между
                     # движением фона и камня
                     # иначе игрок увидит, будто персонаж "толкает" камень
                     # в течение доли секунды
                     shift = bg_speed / FPS
+                    # чтобы камни появлялись не слишком часто
+                    # игрок должен успеть восстановиться
+                    barrier_timer_seconds *= 2
                 else:
                     # передвигаем камень наравне с фоном
                     barrier.move(shift)
+
+        # все то же, что и с камнями
+        if points_in_game:
+            for point in points_in_game:
+                # проверка пересечения рыбки и игрока
+                if not point.check(smoky, shift):
+                    # кол-во рыбок +1
+                    count_fish += 1
+                    # удаляем элемент из списка
+                    points_in_game.remove(point)
+                    # удаляем его с экрана
+                    point.kill()
 
         """MOVE BG"""
         # двигаем спрайты
@@ -395,35 +429,22 @@ def game():
             background2.move(1270 * 2)
         """========"""
 
-        # все то же, что и с камнями
-        if points_in_game:
-            for point in points_in_game:
-                # проверка пересечения рыбки и игрока
-                if not point.check(smoky, shift):
-                    # кол-во рыбок +1
-                    count_fish += 1
-                    # удаляем элемент из списка
-                    points_in_game.remove(point)
-                    # удаляем его с экрана
-                    point.kill()
-
         # счетчик
         anim_count += 1
         # переопределяем текст с обновлённым балансом
         count_text = font.render(str(count_fish), True, (255, 192, 203))
 
-        clock.tick(FPS)
+        clock.tick(fps)
         pygame.display.flip()
 
     pygame.quit()
+    # надо завершить программу
+    return False
 
 
-# флаг
-# нужен для полной перезагрузки программы
-# это необходимо в момент, когда игрок проигрывает
-# мы отображаем ему результат
-# и запускаем программу с самого начала
-do = "Continue"
-while do == "Continue":
+# после проигрыша программа будет перезапускаться
+# с самого начала пока игрок не выйдет сам
+do = True
+while do:
     start_screen()
     do = game()
