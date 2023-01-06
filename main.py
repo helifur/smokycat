@@ -357,6 +357,15 @@ def game():
                     # делаем последнюю жизнь неактивной
                     # меняем ее изображение на image_inactive
                     lives.last_life().image = Life.image_inactive
+
+                    # если все жизни утрачены
+                    if not lives.items:
+                        end()  # показываем картинку Game Over
+                        show_result()  # показываем результат игры
+                        # запускаем программу с самого начала
+                        pygame.quit()
+                        return "Continue"
+
                     # столкновение было
                     is_collide = True
                     # замедляем фон
