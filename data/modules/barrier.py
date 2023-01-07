@@ -1,4 +1,5 @@
 import pygame
+from data.modules.config import BARRIER_SIZE_X, BARRIER_SIZE_Y
 
 
 class Barrier(pygame.sprite.Sprite):
@@ -6,7 +7,7 @@ class Barrier(pygame.sprite.Sprite):
 
     def __init__(self, group, barrier_x):
         super().__init__(group)
-        self.image = pygame.transform.scale(Barrier.image.convert_alpha(), (110, 110))
+        self.image = pygame.transform.scale(Barrier.image.convert_alpha(), (BARRIER_SIZE_X, BARRIER_SIZE_Y))
         self.rect = self.image.get_rect()
         self.rect.x = barrier_x
         self.rect.y = 500
