@@ -15,6 +15,7 @@ from data.modules.config import FIRST_LIFE_SHIFT, FPS, WIDTH, \
 from data.modules.lives import Life, Lives
 from data.modules.menu import Menu
 from data.modules.point import Point
+from data.modules.database import DataBase
 
 
 def load_image(name, color_key=None):
@@ -121,6 +122,8 @@ def show_result():
                 terminate()
 
             if event.type in [pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN]:
+                base.update_balance(count_fish)
+                base.terminate()
                 pygame.quit()
                 return
 
@@ -138,17 +141,21 @@ def show_result():
 
 
 def start_screen():
-    global clock, smoky, is_jump, jump_count, screen, font
+    global clock, smoky, is_jump, jump_count, screen, font, base
 
     pygame.init()
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Smoky Cat")
     clock = pygame.time.Clock()
+    # база данных
+    base = DataBase()
     # FONTS
-    font, font_head = data.modules.config.get_fonts()
+    font, font_head, font_balance = data.modules.config.get_fonts()
     # заголовок
     head = font_head.render("Smoky Cat", True, (255, 255, 255))
+    # баланс
+    balance = font_balance.render(f"Баланс: {base.get_balance()}", True, (138, 43, 226))
     # меню
     menu = Menu()
     menu.append_option('Играть', lambda: 1)
@@ -177,13 +184,15 @@ def start_screen():
 
         menu.draw(screen, 550, 350, 75)
         screen.blit(head, (420, 120))
+        screen.blit(balance, (20, 0))
 
         pygame.display.flip()
         clock.tick(FPS)
 
 
 def game():
-    global jump_count, smoky, count_fish, is_collide, is_jump, barrier_timer_seconds, fps
+    global jump_count, smoky, count_fish, is_collide, is_jump, \
+        barrier_timer_seconds, fps
 
     # общие
     fps = FPS
@@ -240,7 +249,6 @@ def game():
     # счетчик прыжков
     jump_count = JUMP_COUNT
 
-
     # Жизни
     # таймер
     # Когда персонаж сталкивается, имитируем столкновение.
@@ -260,10 +268,6 @@ def game():
     life = Life(FIRST_LIFE_SHIFT)
     # все жизни
     lives = Lives(life)
-    lives.new_life()
-    lives.new_life()
-    lives.new_life()
-    lives.new_life()
 
     # главный герой
     smoky = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)

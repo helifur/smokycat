@@ -5,8 +5,9 @@ from pygame import font
 def get_fonts():
     FONT = font.Font(None, 60)
     FONT_HEAD = font.Font("data/fonts/Sevillana-Regular.ttf", 90)
+    FONT_BALANCE = font.Font("data/fonts/Pacifico-Regular.ttf", 50)
 
-    return FONT, FONT_HEAD
+    return FONT, FONT_HEAD, FONT_BALANCE
 
 
 # общие
@@ -18,7 +19,7 @@ COUNT_TEXT_Y = 20
 
 # фон
 # скорость фона
-BG_SPEED = 600
+BG_SPEED = 620
 # ускорение фона будет увеличиваться каждые
 # BG_SECONDS миллисекунд
 BG_TIMER_SECONDS = 10000
