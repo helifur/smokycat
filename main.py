@@ -11,7 +11,7 @@ from data.modules.barrier import Barrier
 from data.modules.config import FIRST_LIFE_SHIFT, FPS, WIDTH, \
     HEIGHT, BG_SPEED, BG_SPEED_PLUS, BG_TIMER_SECONDS, BARRIER_TIMER_SECONDS, \
     BARRIER_TIMER_DELAY, BARRIER_X, JUMP_COUNT, COLLIDE_MILLIS, COLLIDE_LOOPS, \
-    BARRIER_SIZE_X, COUNT_TEXT_X, COUNT_TEXT_Y
+    BARRIER_SIZE_X, COUNT_TEXT_X, COUNT_TEXT_Y, LIFE_PRICE, SPEED_PRICE
 from data.modules.lives import Life, Lives
 from data.modules.menu import Menu
 from data.modules.point import Point
@@ -141,7 +141,7 @@ def show_result():
 
 
 def start_screen():
-    global clock, smoky, is_jump, jump_count, screen, font, base
+    global clock, smoky, is_jump, jump_count, screen, font, base, head, balance
 
     pygame.init()
 
@@ -159,6 +159,7 @@ def start_screen():
     # меню
     menu = Menu()
     menu.append_option('Играть', lambda: 1)
+    menu.append_option('Магазин', shop)
     menu.append_option('Выйти', terminate)
 
     while True:
@@ -178,6 +179,12 @@ def start_screen():
                 if menu.current_option_index == 0:
                     return  # начинаем игру
 
+                # if menu.current_option_index == 1:
+                #     shop()
+                #     continue
+                    # terminate()
+                    # return
+
                 menu.select()
 
         screen.fill((0, 0, 0))
@@ -185,6 +192,59 @@ def start_screen():
         menu.draw(screen, 550, 350, 75)
         screen.blit(head, (420, 120))
         screen.blit(balance, (20, 0))
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def shop():
+    def back():
+        return False
+
+    def lives_upgrade():
+        return True
+
+    def time_upgrade():
+        return True
+
+    def blit_text(text, coords):
+        y = coords[1]
+        for elem in text.split('\n'):
+            screen.blit(temp_font.render(elem, True, (255, 255, 255)), (coords[0], y))
+            y += 30
+
+    shop_menu = Menu()
+    shop_menu.append_option('Жизни +1', lives_upgrade)
+    shop_menu.append_option('Время +1', time_upgrade)
+    shop_menu.append_option('Назад', back)
+    temp_font = pygame.font.Font(None, 40)
+
+    explanations = [f"""Добавляет 1 жизнь ко всем жизням игрока\nСтоимость: {LIFE_PRICE}""",
+                    f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE}",
+                    "Переход назад в главное меню игры"]
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if pygame.key.get_pressed()[pygame.K_UP]:
+                shop_menu.switch(-1)
+
+            if pygame.key.get_pressed()[pygame.K_DOWN]:
+                shop_menu.switch(1)
+
+            if pygame.key.get_pressed()[pygame.K_RETURN]:
+                if not shop_menu.select():
+                    return
+
+        screen.fill((0, 0, 0))
+
+        screen.blit(head, (420, 120))
+        screen.blit(balance, (20, 0))
+        shop_menu.draw(screen, 550, 350, 75)
+        blit_text(explanations[shop_menu.current_option_index], (350, 650))
 
         pygame.display.flip()
         clock.tick(FPS)

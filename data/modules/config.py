@@ -57,3 +57,9 @@ LIFE_SHIFT = 70
 COLLIDE_MILLIS = 200
 # collide_timer будет срабатывать COLLIDE_LOOPS раз
 COLLIDE_LOOPS = 4
+
+# цены
+# +1 жизнь
+LIFE_PRICE = 50
+# ускорение
+SPEED_PRICE = 30

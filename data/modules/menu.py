@@ -16,7 +16,7 @@ class Menu:
         self.current_option_index = max(0, min(self.current_option_index + direction, len(self.option_surfaces) - 1))
 
     def select(self):
-        self.callbacks[self.current_option_index]()
+        return self.callbacks[self.current_option_index]()
 
     def draw(self, surf, x, y, padding):
         for i, option in enumerate(self.option_surfaces):
