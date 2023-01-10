@@ -1,5 +1,6 @@
 import pygame
-from data.modules.config import LIFE_SHIFT, FIRST_LIFE_SHIFT
+from data.modules.config import LIFE_SHIFT, FIRST_LIFE_SHIFT, LIVES_TABLE
+from data.modules.database import DataBase
 
 
 class Life(pygame.sprite.Sprite):
@@ -15,10 +16,8 @@ class Life(pygame.sprite.Sprite):
 
 
 class Lives(pygame.sprite.Group):
-    def __init__(self, life1):
+    def __init__(self):
         super().__init__()
-        # добавляем первую жизнь
-        self.add(life1)
         # все существующие жизни в виде списка
         self.items = list(self)
 
@@ -27,6 +26,12 @@ class Lives(pygame.sprite.Group):
         self.add(Life(LIFE_SHIFT * len(self) + FIRST_LIFE_SHIFT))
         # переопределяем старый список жизней
         self.items = list(self)
+
+    def setup_lives(self):
+        # используем метод get_data с флагом lives, чтобы дать понять
+        # методу, что мы используем его для получения кол-ва жизней
+        for _ in range(DataBase.get_data(table=LIVES_TABLE)):
+            self.new_life()
 
     def last_life(self):
         """Метод возвращает и удаляет последнюю жизнь в списке."""

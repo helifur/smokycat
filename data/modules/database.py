@@ -6,18 +6,26 @@ class DataBase:
         self.con = sqlite3.connect("data/database/database.db")
 
     @staticmethod
-    def get_prices():
+    def get_data(price=False, table=None):
         con = sqlite3.connect("data/database/database.db")
         cur = con.cursor()
 
-        sql = """SELECT price FROM lives"""
-        lives = cur.execute(sql).fetchone()[0]
-        sql = """SELECT price FROM speed"""
-        speed = cur.execute(sql).fetchone()[0]
+        if price:
+            sql = """SELECT price FROM lives WHERE id = 0"""
+            live = cur.execute(sql).fetchone()[0]
+            sql = """SELECT price FROM speed WHERE id = 0"""
+            speed = cur.execute(sql).fetchone()[0]
 
-        con.close()
+            con.close()
 
-        return lives, speed
+            return live, speed
+
+        else:
+            res = cur.execute(f"""SELECT value FROM {table} WHERE id = 0""").fetchone()[0]
+
+            con.close()
+
+            return res
 
     def insert_rating(self, value):
         cur = self.con.cursor()

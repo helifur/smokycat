@@ -64,6 +64,7 @@ def terminate():
     sys.exit()
 
 
+# функция рендерит новый баланс из базы
 def refresh_balance():
     global balance
 
@@ -186,12 +187,6 @@ def start_screen():
                 if menu.current_option_index == 0:
                     return  # начинаем игру
 
-                # if menu.current_option_index == 1:
-                #     shop()
-                #     continue
-                # terminate()
-                # return
-
                 menu.select()
 
         screen.fill((0, 0, 0))
@@ -205,7 +200,7 @@ def start_screen():
 
 
 def shop():
-    global balance
+    global balance, error, success, explanations, BG_TIMER_SECONDS
 
     def back():
         return False
@@ -222,21 +217,32 @@ def shop():
             pygame.time.set_timer(success_event, 1000, 1)
 
         balance = refresh_balance()
+        update_prices()
         return True
 
     def time_upgrade():
-        global error, success, balance
+        global error, success, balance, BG_TIMER_SECONDS
 
         if base.get_balance() < SPEED_PRICE:
             error = True
             pygame.time.set_timer(error_event, 1000, 1)
         else:
             base.buy_item(SPEED_TABLE, SPEED_PRICE)
+            BG_TIMER_SECONDS = DataBase.get_data(table="speed") * 1000
             success = True
             pygame.time.set_timer(success_event, 1000, 1)
 
         balance = refresh_balance()
+        update_prices()
         return True
+
+    def update_prices():
+        global LIFE_PRICE, SPEED_PRICE, explanations
+
+        LIFE_PRICE, SPEED_PRICE = DataBase.get_data(price=True)
+        explanations = [f"""Добавляет 1 жизнь ко всем жизням игрока\nСтоимость: {LIFE_PRICE} рыбок""",
+                        f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE} рыбок",
+                        "Переход назад в главное меню игры"]
 
     def blit_text(text, coords):
         y = coords[1]
@@ -252,7 +258,6 @@ def shop():
 
     error_event = pygame.USEREVENT + 6
     success_event = pygame.USEREVENT + 7
-    global error, success
     error = False
     success = False
 
@@ -307,6 +312,7 @@ def game():
     # увеличиваем скорость движения фона
     # на BG_SPEED_PLUS пикселей
     speed_timer = pygame.USEREVENT + 1
+    print(BG_TIMER_SECONDS)
     pygame.time.set_timer(speed_timer, BG_TIMER_SECONDS)
     # событие переключения анимации героя
     anim_event = pygame.USEREVENT + 3
@@ -371,10 +377,12 @@ def game():
     # игры после завершения столкновения
     reset_event = pygame.USEREVENT + 5
 
-    # новая жизнь
-    life = Life(FIRST_LIFE_SHIFT)
+    # # новая жизнь
+    # life = Life(FIRST_LIFE_SHIFT)
     # все жизни
-    lives = Lives(life)
+    lives = Lives()
+    # устанавливаем кол-во жизней согласно базе
+    lives.setup_lives()
 
     # главный герой
     smoky = AnimatedSmoky(smoky_sprite, load_image("images/right/smoky_right_sheet.png"), 3, 1, 200, 495)

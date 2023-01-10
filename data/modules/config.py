@@ -29,7 +29,7 @@ SPEED_TABLE = "speed"
 BG_SPEED = 620
 # ускорение фона будет увеличиваться каждые
 # BG_SECONDS миллисекунд
-BG_TIMER_SECONDS = 10000
+BG_TIMER_SECONDS = DataBase.get_data(table="speed") * 1000
 # ускорение фона каждые BG_SECONDS миллисекунд будет
 # увеличиваться на BG_SPEED_PLUS
 BG_SPEED_PLUS = 50
@@ -40,7 +40,7 @@ BG_SPEED_PLUS = 50
 BARRIER_TIMER_SECONDS = 1600
 # каждый раз при ускорении фона таймер уменьшается
 # на BARRIER_TIMER_DELAY миллисекунд
-BARRIER_TIMER_DELAY = 100
+BARRIER_TIMER_DELAY = DataBase.get_data(table="speed")
 # начальная координата любого камня
 BARRIER_X = 1150
 # размеры барьера по x и y
@@ -67,4 +67,4 @@ COLLIDE_LOOPS = 4
 
 # цены
 # +1 жизнь и +1 секунда ускорения, цены
-LIFE_PRICE, SPEED_PRICE = DataBase.get_prices()
+LIFE_PRICE, SPEED_PRICE = DataBase.get_data(price=True)
