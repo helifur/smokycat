@@ -11,7 +11,8 @@ from data.modules.barrier import Barrier
 from data.modules.config import FIRST_LIFE_SHIFT, FPS, WIDTH, \
     HEIGHT, BG_SPEED, BG_SPEED_PLUS, BG_TIMER_SECONDS, BARRIER_TIMER_SECONDS, \
     BARRIER_TIMER_DELAY, BARRIER_X, JUMP_COUNT, COLLIDE_MILLIS, COLLIDE_LOOPS, \
-    BARRIER_SIZE_X, COUNT_TEXT_X, COUNT_TEXT_Y, LIFE_PRICE, SPEED_PRICE
+    BARRIER_SIZE_X, COUNT_TEXT_X, COUNT_TEXT_Y, LIFE_PRICE, SPEED_PRICE, LIVES_TABLE, \
+    SPEED_TABLE
 from data.modules.lives import Life, Lives
 from data.modules.menu import Menu
 from data.modules.point import Point
@@ -61,6 +62,12 @@ def jump():
 def terminate():
     pygame.quit()
     sys.exit()
+
+
+def refresh_balance():
+    global balance
+
+    return font_balance.render(f"Баланс: {base.get_balance()}", True, (138, 43, 226))
 
 
 def end():
@@ -141,7 +148,7 @@ def show_result():
 
 
 def start_screen():
-    global clock, smoky, is_jump, jump_count, screen, font, base, head, balance
+    global clock, smoky, is_jump, jump_count, screen, font, base, head, balance, font_balance
 
     pygame.init()
 
@@ -155,7 +162,7 @@ def start_screen():
     # заголовок
     head = font_head.render("Smoky Cat", True, (255, 255, 255))
     # баланс
-    balance = font_balance.render(f"Баланс: {base.get_balance()}", True, (138, 43, 226))
+    balance = refresh_balance()
     # меню
     menu = Menu()
     menu.append_option('Играть', lambda: 1)
@@ -182,8 +189,8 @@ def start_screen():
                 # if menu.current_option_index == 1:
                 #     shop()
                 #     continue
-                    # terminate()
-                    # return
+                # terminate()
+                # return
 
                 menu.select()
 
@@ -198,13 +205,37 @@ def start_screen():
 
 
 def shop():
+    global balance
+
     def back():
         return False
 
     def lives_upgrade():
+        global error, success, balance
+
+        if base.get_balance() < LIFE_PRICE:
+            error = True
+            pygame.time.set_timer(error_event, 1000, 1)
+        else:
+            base.buy_item(LIVES_TABLE, LIFE_PRICE)
+            success = True
+            pygame.time.set_timer(success_event, 1000, 1)
+
+        balance = refresh_balance()
         return True
 
     def time_upgrade():
+        global error, success, balance
+
+        if base.get_balance() < SPEED_PRICE:
+            error = True
+            pygame.time.set_timer(error_event, 1000, 1)
+        else:
+            base.buy_item(SPEED_TABLE, SPEED_PRICE)
+            success = True
+            pygame.time.set_timer(success_event, 1000, 1)
+
+        balance = refresh_balance()
         return True
 
     def blit_text(text, coords):
@@ -219,15 +250,29 @@ def shop():
     shop_menu.append_option('Назад', back)
     temp_font = pygame.font.Font(None, 40)
 
-    explanations = [f"""Добавляет 1 жизнь ко всем жизням игрока\nСтоимость: {LIFE_PRICE}""",
-                    f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE}",
+    error_event = pygame.USEREVENT + 6
+    success_event = pygame.USEREVENT + 7
+    global error, success
+    error = False
+    success = False
+
+    explanations = [f"""Добавляет 1 жизнь ко всем жизням игрока\nСтоимость: {LIFE_PRICE} рыбок""",
+                    f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE} рыбок",
                     "Переход назад в главное меню игры"]
 
     while True:
+        screen.fill((0, 0, 0))
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+            if event.type == error_event:
+                error = False
+
+            if event.type == success_event:
+                success = False
 
             if pygame.key.get_pressed()[pygame.K_UP]:
                 shop_menu.switch(-1)
@@ -235,16 +280,18 @@ def shop():
             if pygame.key.get_pressed()[pygame.K_DOWN]:
                 shop_menu.switch(1)
 
-            if pygame.key.get_pressed()[pygame.K_RETURN]:
-                if not shop_menu.select():
-                    return
-
-        screen.fill((0, 0, 0))
+            if pygame.key.get_pressed()[pygame.K_RETURN] and not shop_menu.select():
+                return
 
         screen.blit(head, (420, 120))
         screen.blit(balance, (20, 0))
         shop_menu.draw(screen, 550, 350, 75)
         blit_text(explanations[shop_menu.current_option_index], (350, 650))
+
+        if error:
+            screen.blit(temp_font.render("На вашем счете недостаточно рыбок!", True, (255, 0, 0)), (350, 600))
+        elif success:
+            screen.blit(temp_font.render("Покупка прошла успешно!", True, (0, 255, 0)), (350, 600))
 
         pygame.display.flip()
         clock.tick(FPS)

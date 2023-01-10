@@ -1,5 +1,6 @@
 """Здесь задаются константы и параметры игры."""
 from pygame import font
+from data.modules.database import DataBase
 
 
 def get_fonts():
@@ -16,6 +17,12 @@ WIDTH = 1200
 HEIGHT = 720
 COUNT_TEXT_X = 990
 COUNT_TEXT_Y = 20
+# название таблицы жизней в базе
+LIVES_TABLE = "lives"
+# Название таблицы ускорения в базе
+# отныне speed - это время, когда происходит ускорение персонажа.
+# То есть каждые value секунд, указанные в базе, персонаж ускоряется
+SPEED_TABLE = "speed"
 
 # фон
 # скорость фона
@@ -59,7 +66,5 @@ COLLIDE_MILLIS = 200
 COLLIDE_LOOPS = 4
 
 # цены
-# +1 жизнь
-LIFE_PRICE = 50
-# ускорение
-SPEED_PRICE = 30
+# +1 жизнь и +1 секунда ускорения, цены
+LIFE_PRICE, SPEED_PRICE = DataBase.get_prices()

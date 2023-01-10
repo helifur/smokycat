@@ -5,6 +5,20 @@ class DataBase:
     def __init__(self):
         self.con = sqlite3.connect("data/database/database.db")
 
+    @staticmethod
+    def get_prices():
+        con = sqlite3.connect("data/database/database.db")
+        cur = con.cursor()
+
+        sql = """SELECT price FROM lives"""
+        lives = cur.execute(sql).fetchone()[0]
+        sql = """SELECT price FROM speed"""
+        speed = cur.execute(sql).fetchone()[0]
+
+        con.close()
+
+        return lives, speed
+
     def insert_rating(self, value):
         cur = self.con.cursor()
         sql = f"""INSERT INTO rating VALUES (0, {value}) WHERE id = 0"""
@@ -23,6 +37,19 @@ class DataBase:
         cur = self.con.cursor()
         sql = """SELECT value FROM balance WHERE id = 0"""
         return cur.execute(sql).fetchone()[0]
+
+    def buy_item(self, table, price):
+        cur = self.con.cursor()
+        sql = f"""UPDATE {table} SET 'value' = value + 1 WHERE id = 0"""
+        cur.execute(sql)
+        sql = f"""UPDATE balance SET 'value' = value - {price} WHERE id = 0"""
+        cur.execute(sql)
+
+        # делаем дороже на 100 рыбок
+        cur.execute(f"""UPDATE {table} SET 'price' = price + 100 WHERE id = 0""")
+
+        self.con.commit()
+        cur.close()
 
     def terminate(self):
         self.con.close()
