@@ -202,9 +202,11 @@ def start_screen():
 def shop():
     global balance, error, success, explanations, BG_TIMER_SECONDS
 
+    # вернуться назад
     def back():
         return False
 
+    # прокачка жизней
     def lives_upgrade():
         global error, success, balance
 
@@ -220,9 +222,11 @@ def shop():
         update_prices()
         return True
 
+    # прокачка ускорения
     def time_upgrade():
         global error, success, balance, BG_TIMER_SECONDS
 
+        # если баланс меньше цены
         if base.get_balance() < SPEED_PRICE:
             error = True
             pygame.time.set_timer(error_event, 1000, 1)
@@ -236,6 +240,7 @@ def shop():
         update_prices()
         return True
 
+    # обновить цены
     def update_prices():
         global LIFE_PRICE, SPEED_PRICE, explanations
 
@@ -244,23 +249,34 @@ def shop():
                         f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE} рыбок",
                         "Переход назад в главное меню игры"]
 
+    # отображаем пояснения
+    # тк pygame не видит \n, то разделяем вручную
     def blit_text(text, coords):
         y = coords[1]
         for elem in text.split('\n'):
             screen.blit(temp_font.render(elem, True, (255, 255, 255)), (coords[0], y))
             y += 30
 
+    # создаем меню магазина
     shop_menu = Menu()
+    # добавляем туда элементы
     shop_menu.append_option('Жизни +1', lives_upgrade)
     shop_menu.append_option('Время +1', time_upgrade)
     shop_menu.append_option('Назад', back)
+    # шрифт для надписей
     temp_font = pygame.font.Font(None, 40)
 
+    # событие, при котором закончится отображение сообщения об ошибке
     error_event = pygame.USEREVENT + 6
+    # то же самое, только для успеха
     success_event = pygame.USEREVENT + 7
+    # флаг
+    # если True, то отображаем сообщение об ошибке
     error = False
+    # то же
     success = False
 
+    # объяснения по порядку, 0 индекс в списке соответствует 0 индексу в меню
     explanations = [f"""Добавляет 1 жизнь ко всем жизням игрока\nСтоимость: {LIFE_PRICE} рыбок""",
                     f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE} рыбок",
                     "Переход назад в главное меню игры"]
@@ -312,7 +328,6 @@ def game():
     # увеличиваем скорость движения фона
     # на BG_SPEED_PLUS пикселей
     speed_timer = pygame.USEREVENT + 1
-    print(BG_TIMER_SECONDS)
     pygame.time.set_timer(speed_timer, BG_TIMER_SECONDS)
     # событие переключения анимации героя
     anim_event = pygame.USEREVENT + 3
