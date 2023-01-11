@@ -155,6 +155,7 @@ def start_screen():
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Smoky Cat")
+    pygame.display.set_icon(pygame.image.load("data/images/icon/paw.ico"))
     clock = pygame.time.Clock()
     # база данных
     base = DataBase()
