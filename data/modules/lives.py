@@ -12,7 +12,7 @@ class Life(pygame.sprite.Sprite):
         self.image = Life.image_active.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x = x
-        self.rect.y = 10
+        self.rect.y = 43
 
 
 class Lives(pygame.sprite.Group):
@@ -30,7 +30,7 @@ class Lives(pygame.sprite.Group):
     def setup_lives(self):
         # используем метод get_data с флагом lives, чтобы дать понять
         # методу, что мы используем его для получения кол-ва жизней
-        for _ in range(DataBase.get_data(table=LIVES_TABLE)):
+        for _ in range(DataBase.get_data(table=LIVES_TABLE)[0]):
             self.new_life()
 
     def last_life(self):

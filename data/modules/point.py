@@ -1,8 +1,10 @@
 import pygame
+from data.modules.database import DataBase
 
 
 class Point(pygame.sprite.Sprite):
     image = pygame.image.load("data/images/points/fish.png")
+    current_price = DataBase.get_data(table="fish")[0]
 
     def __init__(self, group, point_x):
         super().__init__(group)

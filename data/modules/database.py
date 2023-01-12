@@ -3,29 +3,16 @@ import sqlite3
 
 class DataBase:
     def __init__(self):
-        self.con = sqlite3.connect("data/database/database.db")
+        self.con = sqlite3.connect("data/modules/database/database.db")
 
     @staticmethod
-    def get_data(price=False, table=None):
-        con = sqlite3.connect("data/database/database.db")
+    def get_data(table=None):
+        con = sqlite3.connect("data/modules/database/database.db")
         cur = con.cursor()
 
-        if price:
-            sql = """SELECT price FROM lives WHERE id = 0"""
-            live = cur.execute(sql).fetchone()[0]
-            sql = """SELECT price FROM speed WHERE id = 0"""
-            speed = cur.execute(sql).fetchone()[0]
-
-            con.close()
-
-            return live, speed
-
-        else:
-            res = cur.execute(f"""SELECT value FROM {table} WHERE id = 0""").fetchone()[0]
-
-            con.close()
-
-            return res
+        sql = f"""SELECT value, price FROM {table} WHERE id = 0"""
+        res = cur.execute(sql).fetchall()
+        return res[0]
 
     def insert_rating(self, value):
         cur = self.con.cursor()
@@ -46,15 +33,15 @@ class DataBase:
         sql = """SELECT value FROM balance WHERE id = 0"""
         return cur.execute(sql).fetchone()[0]
 
-    def buy_item(self, table, price):
+    def buy_item(self, table, price, markup):
         cur = self.con.cursor()
         sql = f"""UPDATE {table} SET 'value' = value + 1 WHERE id = 0"""
         cur.execute(sql)
         sql = f"""UPDATE balance SET 'value' = value - {price} WHERE id = 0"""
         cur.execute(sql)
 
-        # делаем дороже на 100 рыбок
-        cur.execute(f"""UPDATE {table} SET 'price' = price + 100 WHERE id = 0""")
+        # делаем дороже на markup рыбок
+        cur.execute(f"""UPDATE {table} SET 'price' = price + {markup} WHERE id = 0""")
 
         self.con.commit()
         cur.close()

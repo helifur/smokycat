@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+import pymorphy2
 
 import pygame
 
@@ -12,7 +13,7 @@ from data.modules.config import FIRST_LIFE_SHIFT, FPS, WIDTH, \
     HEIGHT, BG_SPEED, BG_SPEED_PLUS, BG_TIMER_SECONDS, BARRIER_TIMER_SECONDS, \
     BARRIER_TIMER_DELAY, BARRIER_X, JUMP_COUNT, COLLIDE_MILLIS, COLLIDE_LOOPS, \
     BARRIER_SIZE_X, COUNT_TEXT_X, COUNT_TEXT_Y, LIFE_PRICE, SPEED_PRICE, LIVES_TABLE, \
-    SPEED_TABLE
+    SPEED_TABLE, FISH_PRICE, FISH_TABLE
 from data.modules.lives import Life, Lives
 from data.modules.menu import Menu
 from data.modules.point import Point
@@ -105,18 +106,15 @@ def end():
 def show_result():
     FPS = 20
 
-    # выбираем правильную форму слова "рыбки" в зависимости от результата
-    if (count_fish % 10) == 0 or (5 <= (count_fish % 10) <= 9) or count_fish == 11:
-        result = font.render(f"Вы собрали {count_fish} рыбок!", True, (255, 192, 203))
-    elif (count_fish % 10) == 1:
-        result = font.render(f"Вы собрали {count_fish} рыбку!", True, (255, 192, 203))
-    else:
-        result = font.render(f"Вы собрали {count_fish} рыбки!", True, (255, 192, 203))
+    # выбираем правильную форму слова "рыбка" в зависимости от результата
+    morph = pymorphy2.MorphAnalyzer()
+    fish_word = morph.parse('рыбка')[0].make_agree_with_number(count_fish).word
+    result = font_end_screen.render(f"Вы собрали {count_fish} {fish_word}!", True, (255, 192, 203))
 
     result_x = 390
     result_y = 200
 
-    press_any = font.render("Нажмите любую клавишу для продолжения", True, (255, 255, 255))
+    press_any = font_end_screen.render("Нажмите любую клавишу для продолжения", True, (255, 255, 255))
     pa_x = 160
     pa_y = 300
 
@@ -149,7 +147,8 @@ def show_result():
 
 
 def start_screen():
-    global clock, smoky, is_jump, jump_count, screen, font, base, head, balance, font_balance
+    global clock, smoky, is_jump, jump_count, screen, font, base, \
+        head, balance, font_balance, font_end_screen
 
     pygame.init()
 
@@ -160,7 +159,7 @@ def start_screen():
     # база данных
     base = DataBase()
     # FONTS
-    font, font_head, font_balance = data.modules.config.get_fonts()
+    font, font_end_screen, font_head, font_balance = data.modules.config.get_fonts()
     # заголовок
     head = font_head.render("Smoky Cat", True, (255, 255, 255))
     # баланс
@@ -211,16 +210,16 @@ def shop():
     def lives_upgrade():
         global error, success, balance
 
-        if base.get_balance() < LIFE_PRICE:
+        if base.get_balance() < life_price:
             error = True
             pygame.time.set_timer(error_event, 1000, 1)
         else:
-            base.buy_item(LIVES_TABLE, LIFE_PRICE)
+            base.buy_item(LIVES_TABLE, life_price, 100)
             success = True
             pygame.time.set_timer(success_event, 1000, 1)
 
         balance = refresh_balance()
-        update_prices()
+        check_maximums()
         return True
 
     # прокачка ускорения
@@ -228,27 +227,86 @@ def shop():
         global error, success, balance, BG_TIMER_SECONDS
 
         # если баланс меньше цены
-        if base.get_balance() < SPEED_PRICE:
+        if base.get_balance() < speed_price:
             error = True
             pygame.time.set_timer(error_event, 1000, 1)
         else:
-            base.buy_item(SPEED_TABLE, SPEED_PRICE)
-            BG_TIMER_SECONDS = DataBase.get_data(table="speed") * 1000
+            base.buy_item(SPEED_TABLE, speed_price, 100)
+            BG_TIMER_SECONDS = DataBase.get_data(table=SPEED_TABLE)[0] * 1000
             success = True
             pygame.time.set_timer(success_event, 1000, 1)
 
         balance = refresh_balance()
-        update_prices()
+        # проверяем максимумы
+        check_maximums()
+        return True
+
+    # обновить цену рыбки
+    def fish_upgrade():
+        global error, success, balance, BG_TIMER_SECONDS
+
+        # если баланс меньше цены
+        if base.get_balance() < fish_price:
+            error = True
+            pygame.time.set_timer(error_event, 1000, 1)
+        else:
+            base.buy_item(FISH_TABLE, fish_price, fish_price)
+            success = True
+            pygame.time.set_timer(success_event, 1000, 1)
+
+        balance = refresh_balance()
+        # проверяем максимумы
+        check_maximums()
         return True
 
     # обновить цены
-    def update_prices():
-        global LIFE_PRICE, SPEED_PRICE, explanations
+    def update_prices(maximums=None):
+        global life_price, speed_price, fish_price, explanations
 
-        LIFE_PRICE, SPEED_PRICE = DataBase.get_data(price=True)
-        explanations = [f"""Добавляет 1 жизнь ко всем жизням игрока\nСтоимость: {LIFE_PRICE} рыбок""",
-                        f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE} рыбок",
+        life_price = DataBase.get_data(table=LIVES_TABLE)[1]
+        speed_price = DataBase.get_data(table=SPEED_TABLE)[1]
+        fish_price = DataBase.get_data(table=FISH_TABLE)[1]
+        Point.current_price = DataBase.get_data(table=FISH_TABLE)[0]
+        # объяснения по порядку, 0 индекс в списке соответствует 0 индексу в меню
+        explanations = [f"Добавляет 1 жизнь ко всем жизням игрока\n"
+                        f"Текущее количество жизней: {base.get_data(table=LIVES_TABLE)[0]}\n"
+                        f"Стоимость: {life_price} рыбок",
+                        f"Ускорение героя станет реже на 1 секунду\n"
+                        f"Текущее ускорение: каждые {base.get_data(table=SPEED_TABLE)[0]} секунд\n"
+                        f"Стоимость: {speed_price} рыбок",
+                        f"Каждая собранная в игре рыбка\n"
+                        f"будет начислять на баланс 1 рыбкой\n"
+                        f"больше текущей цены рыбки. "
+                        f"Текущая цена рыбки: {Point.current_price}.\n"
+                        f"Стоимость улучшения: {fish_price} рыбок",
                         "Переход назад в главное меню игры"]
+
+        # устанавливаем оповещения, если нужно
+        for index, phrase in maximums:
+            explanations[index] = f"Максимально прокачано!{phrase}"
+
+    # проверяет, есть ли элементы,
+    # прокачанные на максимум
+    def check_maximums():
+        # массив, хранящий индексы всех элементов, прокачанных на максимум
+        # каждый раз при обновлении цен обновляется и список пояснений,
+        # следовательно, нужно выявлять максимумы и вместо их описания
+        # просто сообщать пользователю, что навык прокачан на максимум
+        # ведь улучшать некуда
+        args = []
+        # проверяем, достиг ли апгрейд рыбок максимума
+        if base.get_data(table=FISH_TABLE)[0] == 5:
+            args.append((2, f"\nТекущая цена рыбки: {Point.current_price}"))
+
+        # проверяем, достиг ли апгрейд ускорения максимума
+        if base.get_data(table=SPEED_TABLE)[0] == 50:
+            args.append((1, f"\nТекущее ускорение: каждые {base.get_data(table=SPEED_TABLE)[0]} секунд"))
+
+        # проверяем, достиг ли апгрейд жизней максимума
+        if base.get_data(table=LIVES_TABLE)[0] == 10:
+            args.append((0, f"\nТекущее количество жизней: {base.get_data(table=LIVES_TABLE)[0]}"))
+
+        update_prices(maximums=args)
 
     # отображаем пояснения
     # тк pygame не видит \n, то разделяем вручную
@@ -263,9 +321,14 @@ def shop():
     # добавляем туда элементы
     shop_menu.append_option('Жизни +1', lives_upgrade)
     shop_menu.append_option('Время +1', time_upgrade)
+    shop_menu.append_option('Цена рыбки +1', fish_upgrade)
     shop_menu.append_option('Назад', back)
     # шрифт для надписей
     temp_font = pygame.font.Font(None, 40)
+    # определяем цены
+    life_price = LIFE_PRICE
+    speed_price = SPEED_PRICE
+    fish_price = FISH_PRICE
 
     # событие, при котором закончится отображение сообщения об ошибке
     error_event = pygame.USEREVENT + 6
@@ -278,9 +341,9 @@ def shop():
     success = False
 
     # объяснения по порядку, 0 индекс в списке соответствует 0 индексу в меню
-    explanations = [f"""Добавляет 1 жизнь ко всем жизням игрока\nСтоимость: {LIFE_PRICE} рыбок""",
-                    f"Ускорение героя станет реже на 1 секунду\nСтоимость: {SPEED_PRICE} рыбок",
-                    "Переход назад в главное меню игры"]
+    # определяем их в функции update_prices(), чтобы заодно установить максимумы
+    explanations = []
+    check_maximums()
 
     while True:
         screen.fill((0, 0, 0))
@@ -302,18 +365,20 @@ def shop():
             if pygame.key.get_pressed()[pygame.K_DOWN]:
                 shop_menu.switch(1)
 
-            if pygame.key.get_pressed()[pygame.K_RETURN] and not shop_menu.select():
-                return
+            if pygame.key.get_pressed()[pygame.K_RETURN]:
+                if not explanations[shop_menu.current_option_index] == "Максимально прокачано!" and \
+                        not shop_menu.select():
+                    return
 
         screen.blit(head, (420, 120))
         screen.blit(balance, (20, 0))
-        shop_menu.draw(screen, 550, 350, 75)
-        blit_text(explanations[shop_menu.current_option_index], (350, 650))
+        shop_menu.draw(screen, 535, 300, 75)
+        blit_text(explanations[shop_menu.current_option_index], (350, 600))
 
         if error:
-            screen.blit(temp_font.render("На вашем счете недостаточно рыбок!", True, (255, 0, 0)), (350, 600))
+            screen.blit(temp_font.render("На вашем счете недостаточно рыбок!", True, (255, 0, 0)), (350, 570))
         elif success:
-            screen.blit(temp_font.render("Покупка прошла успешно!", True, (0, 255, 0)), (350, 600))
+            screen.blit(temp_font.render("Покупка прошла успешно!", True, (0, 255, 0)), (350, 570))
 
         pygame.display.flip()
         clock.tick(FPS)
@@ -464,7 +529,7 @@ def game():
                 # возвращаем исходные значения
                 bg_speed *= 2
 
-            # ускорение каждые 10 секунд
+            # ускорение каждые BG_TIMER_SECONDS секунд
             if event.type == speed_timer:
                 # ускоряем движение
                 bg_speed += BG_SPEED_PLUS
@@ -556,7 +621,7 @@ def game():
                 # проверка пересечения рыбки и игрока
                 if not point.check(smoky, shift):
                     # кол-во рыбок +1
-                    count_fish += 1
+                    count_fish += Point.current_price
                     # переопределяем текст с обновлённым балансом
                     count_text = font.render(f"Рыбки: {count_fish}", True, (255, 192, 203))
                     # удаляем элемент из списка
