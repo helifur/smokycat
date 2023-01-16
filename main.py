@@ -1,7 +1,7 @@
 import os
 import random
 import sys
-import pymorphy2
+from pytils import numeral
 
 import pygame
 
@@ -107,9 +107,8 @@ def show_result():
     FPS = 20
 
     # выбираем правильную форму слова "рыбка" в зависимости от результата
-    morph = pymorphy2.MorphAnalyzer()
-    fish_word = morph.parse('рыбка')[0].make_agree_with_number(count_fish).word
-    result = font_end_screen.render(f"Вы собрали {count_fish} {fish_word}!", True, (255, 192, 203))
+    fish_word = numeral.get_plural(count_fish, "рыбку, рыбки, рыбок")
+    result = font_end_screen.render(f"Вы собрали {fish_word}!", True, (255, 192, 203))
 
     result_x = 390
     result_y = 200
