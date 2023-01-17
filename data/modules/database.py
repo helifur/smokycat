@@ -33,8 +33,9 @@ class DataBase:
         sql = """SELECT value FROM balance WHERE id = 0"""
         return cur.execute(sql).fetchone()[0]
 
-    def buy_item(self, table, price, markup):
+    def buy_item(self, table, markup):
         cur = self.con.cursor()
+        price = cur.execute(f"""SELECT price FROM {table} WHERE id = 0""").fetchone()[0]
         sql = f"""UPDATE {table} SET 'value' = value + 1 WHERE id = 0"""
         cur.execute(sql)
         sql = f"""UPDATE balance SET 'value' = value - {price} WHERE id = 0"""
