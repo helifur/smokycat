@@ -213,7 +213,7 @@ def shop():
             error = True
             pygame.time.set_timer(error_event, 1000, 1)
         else:
-            base.buy_item(LIVES_TABLE, life_price, 100)
+            base.buy_item(LIVES_TABLE, 100)
             success = True
             pygame.time.set_timer(success_event, 1000, 1)
 
@@ -230,7 +230,7 @@ def shop():
             error = True
             pygame.time.set_timer(error_event, 1000, 1)
         else:
-            base.buy_item(SPEED_TABLE, speed_price, 100)
+            base.buy_item(SPEED_TABLE, 100)
             BG_TIMER_SECONDS = DataBase.get_data(table=SPEED_TABLE)[0] * 1000
             success = True
             pygame.time.set_timer(success_event, 1000, 1)
@@ -249,7 +249,7 @@ def shop():
             error = True
             pygame.time.set_timer(error_event, 1000, 1)
         else:
-            base.buy_item(FISH_TABLE, fish_price, fish_price)
+            base.buy_item(FISH_TABLE, fish_price)
             success = True
             fish_price = DataBase.get_data(table=FISH_TABLE)[1]
             pygame.time.set_timer(success_event, 1000, 1)
