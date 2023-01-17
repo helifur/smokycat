@@ -242,7 +242,7 @@ def shop():
 
     # обновить цену рыбки
     def fish_upgrade():
-        global error, success, balance, BG_TIMER_SECONDS
+        global error, success, balance, BG_TIMER_SECONDS, fish_price
 
         # если баланс меньше цены
         if base.get_balance() < fish_price:
@@ -251,6 +251,7 @@ def shop():
         else:
             base.buy_item(FISH_TABLE, fish_price, fish_price)
             success = True
+            fish_price = DataBase.get_data(table=FISH_TABLE)[1]
             pygame.time.set_timer(success_event, 1000, 1)
 
         balance = refresh_balance()
@@ -295,7 +296,7 @@ def shop():
         args = []
         # проверяем, достиг ли апгрейд рыбок максимума
         if base.get_data(table=FISH_TABLE)[0] == 5:
-            args.append((2, f"\nТекущая цена рыбки: {Point.current_price}"))
+            args.append((2, f"\nТекущая цена рыбки: {base.get_data(table=FISH_TABLE)[0]}"))
 
         # проверяем, достиг ли апгрейд ускорения максимума
         if base.get_data(table=SPEED_TABLE)[0] == 50:
@@ -364,10 +365,13 @@ def shop():
             if pygame.key.get_pressed()[pygame.K_DOWN]:
                 shop_menu.switch(1)
 
-            if pygame.key.get_pressed()[pygame.K_RETURN]:
-                if not explanations[shop_menu.current_option_index] == "Максимально прокачано!" and \
-                        not shop_menu.select():
-                    return
+            if (
+                    pygame.key.get_pressed()[pygame.K_RETURN]
+                    and "Максимально прокачано!"
+                    not in explanations[shop_menu.current_option_index]
+                    and not shop_menu.select()
+            ):
+                return
 
         screen.blit(head, (420, 120))
         screen.blit(balance, (20, 0))
